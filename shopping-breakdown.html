@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What people shop for with Fo</title>
+<style>
+.viz-root{
+  color-scheme:light;
+  --page:#f9f9f7; --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --series-1:#2a78d6; --series-1-hover:#1c5cab; --series-2:#eb6834;
+  --seq-0:#f0efec; --seq-1:#cde2fb; --seq-2:#9ec5f4; --seq-3:#5598e7; --seq-4:#256abf; --seq-5:#0d366b;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])) .viz-root{
+    color-scheme:dark;
+    --page:#0d0d0d; --surface-1:#1a1a19; --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5; --series-1-hover:#6da7ec; --series-2:#d95926;
+    --seq-0:#262624; --seq-1:#104281; --seq-2:#184f95; --seq-3:#256abf; --seq-4:#3987e5; --seq-5:#86b6ef;
+  }
+}
+:root[data-theme="dark"] .viz-root{
+  color-scheme:dark;
+  --page:#0d0d0d; --surface-1:#1a1a19; --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --series-1:#3987e5; --series-1-hover:#6da7ec; --series-2:#d95926;
+  --seq-0:#262624; --seq-1:#104281; --seq-2:#184f95; --seq-3:#256abf; --seq-4:#3987e5; --seq-5:#86b6ef;
+}
+*{box-sizing:border-box}
+body{margin:0}
+.viz-root{background:var(--page);color:var(--text-primary);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;padding:40px 20px 80px}
+.wrap{max-width:1080px;margin:0 auto}
+header h1{font-size:30px;line-height:1.2;margin:0 0 8px;font-weight:650}
+header p{color:var(--text-secondary);margin:0;max-width:760px}
+.meta{color:var(--text-muted);font-size:13px;margin-top:10px}
+.toggle{float:right;font:inherit;font-size:13px;color:var(--text-secondary);background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer}
+h2{font-size:20px;margin:48px 0 6px;font-weight:650}
+.lede{color:var(--text-secondary);margin:0 0 16px;max-width:780px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:28px}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.tile .label{color:var(--text-secondary);font-size:13px}
+.tile .value{font-size:34px;font-weight:650;line-height:1.15;margin-top:4px}
+.tile .sub{color:var(--text-muted);font-size:13px;margin-top:2px}
+.tile.hero .value{font-size:52px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:18px 20px 14px}
+.card h3{font-size:15px;margin:0 0 2px;font-weight:600}
+.card .sub{color:var(--text-secondary);font-size:13px;margin:0 0 12px}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.tick{fill:var(--text-muted);font-size:12px;font-variant-numeric:tabular-nums}
+.lab{fill:var(--text-primary);font-size:13px}
+.val{fill:var(--text-secondary);font-size:12px;font-variant-numeric:tabular-nums}
+.colhead{fill:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.bar{fill:var(--series-1);transition:fill .12s}
+.bar.alt{fill:var(--series-2)}
+.hit{fill:transparent;cursor:default;outline:none}
+.row:hover .bar,.row:focus-within .bar{fill:var(--series-1-hover)}
+.gridline{stroke:var(--grid);stroke-width:1}
+details{margin-top:8px}
+summary{color:var(--text-muted);font-size:12px;cursor:pointer}
+table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:4px 8px;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--text-muted);font-weight:500}
+.heat td{text-align:center;border:2px solid var(--surface-1);padding:0;height:34px;min-width:58px;font-size:12px}
+.heat th{text-align:center;padding:4px}
+.heat td.rowh{text-align:left;padding:0 8px;color:var(--text-primary);background:none;border:none;white-space:nowrap}
+.legend-ramp{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:12px;margin-top:10px}
+.legend-ramp span.sw{width:22px;height:12px;border-radius:2px;display:inline-block}
+.callout{background:var(--surface-1);border:1px solid var(--border);border-left:4px solid var(--series-1);border-radius:10px;padding:14px 18px;margin:16px 0}
+.callout b{font-weight:600}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.mini{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.mini .big{font-size:28px;font-weight:650}
+.mini .t{font-weight:600;margin-top:2px}
+.mini .d{color:var(--text-secondary);font-size:13px;margin-top:4px}
+#tip{position:fixed;pointer-events:none;background:var(--surface-1);border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.12);border-radius:8px;padding:8px 10px;font-size:13px;opacity:0;transition:opacity .08s;z-index:10;max-width:280px}
+#tip .tv{font-weight:650;font-size:15px}
+#tip .tl{color:var(--text-secondary)}
+#tip .tx{color:var(--text-muted);font-size:12px;margin-top:2px}
+.foot{color:var(--text-muted);font-size:13px;margin-top:48px;border-top:1px solid var(--grid);padding-top:16px}
+.foot li{margin:4px 0}
+.heat td.s0{background:var(--seq-0);color:var(--text-primary)}.heat td.s1{background:var(--seq-1);color:var(--hink-1)}.heat td.s2{background:var(--seq-2);color:var(--hink-2)}.heat td.s3{background:var(--seq-3);color:var(--hink-3)}.heat td.s4{background:var(--seq-4);color:var(--hink-4)}.heat td.s5{background:var(--seq-5);color:var(--hink-5)}
+.viz-root{--hink-1:#0b0b0b;--hink-2:#0b0b0b;--hink-3:#0b0b0b;--hink-4:#ffffff;--hink-5:#ffffff}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])) .viz-root{--hink-1:#ffffff;--hink-2:#ffffff;--hink-3:#ffffff;--hink-4:#0b0b0b;--hink-5:#0b0b0b}}
+:root[data-theme="dark"] .viz-root{--hink-1:#ffffff;--hink-2:#ffffff;--hink-3:#ffffff;--hink-4:#0b0b0b;--hink-5:#0b0b0b}
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="wrap">
+<header>
+  <button class="toggle" id="themeBtn" type="button">Toggle dark mode</button>
+  <h1>What people shop for with Fo</h1>
+  <p>Shopping categories, kinds of shopping missions, how complex they get, and when a phone call is the right tool. Built from every task real users gave Fo, every purchase it paid for, and every call it placed.</p>
+  <div class="meta">Tasks and calls: Sep 24 – Oct 12, 2026 · Purchases: Aug 8 – Oct 12, 2026 · Team and test accounts excluded</div>
+</header>
+
+<div class="tiles" id="tiles"></div>
+
+<h2>1. What they shop for</h2>
+<p class="lede" id="catLede"></p>
+<div class="grid2">
+  <div class="card"><h3>Retail categories</h3><p class="sub">Users who asked Fo for help in each category</p><div id="retailCat"></div></div>
+  <div class="card"><h3>Services, travel and other spending</h3><p class="sub">Users per category, non-retail commerce</p><div id="commerceCat"></div></div>
+</div>
+
+<h2>2. Where they are</h2>
+<p class="lede">The US is the largest market, then India and the UK. In every large market, about two thirds of users shop or book something through Fo, and roughly a quarter to a third shop for goods.</p>
+<div class="card"><h3>Share of users who shop, by country</h3><p class="sub">Bars: share of all users in that country. Hover for counts.</p><div id="country"></div></div>
+<div class="card" style="margin-top:16px"><h3>What each country shops for</h3><p class="sub">Share of each country's retail tasks per category (columns add up to about 100% across all categories)</p><div id="heat"></div></div>
+
+<h2>3. Kinds of shopping missions</h2>
+<p class="lede">Most shopping starts with finding and comparing, and those tasks almost always succeed. The harder missions are the transactional ones: booking, buying, cancelling and disputes. Those are also where phone calls come in.</p>
+<div class="card"><h3>Missions by number of users</h3><p class="sub">Bar: users. Columns: how often the task succeeded, and how often it needed a phone call</p><div id="mission"></div></div>
+
+<h2>4. How complex it gets</h2>
+<p class="lede">The model rated each task 1 to 3. Complex tasks involve several merchants, logins, payments, negotiation or disputes. They succeed less often, and most of them need a phone call.</p>
+<div class="cards3" id="cx"></div>
+
+<h2>5. When a phone call makes sense</h2>
+<p class="lede" id="callLede"></p>
+<div class="grid2">
+  <div class="card"><h3>Why a retail call was made</h3><p class="sub">Calls about retail goods, by mission</p><div id="callMission"></div></div>
+  <div class="card"><h3>Why the website wasn't enough</h3><p class="sub">Share of all shopping calls, by main reason (the largest reasons shown)</p><div id="callWhy"></div></div>
+</div>
+<div class="callout" id="amazonCallout"></div>
+<div class="card"><h3>Amazon-related calls</h3><p class="sub" id="azCallSub"></p><div id="azCalls"></div></div>
+
+<h2>6. What Fo actually bought</h2>
+<p class="lede" id="purchLede"></p>
+<div class="grid2">
+  <div class="card"><h3>Completed purchases by category</h3><p class="sub">Number of completed purchases. Hover for spend.</p><div id="purchCat"></div></div>
+  <div class="card"><h3>Completed purchases by buyer country</h3><p class="sub">Number of completed purchases. Hover for spend.</p><div id="purchCountry"></div></div>
+</div>
+
+<div class="foot">
+  <b>How this was measured</b>
+  <ul>
+    <li>Tasks: every request a user gave Fo, as recorded by Fo's own conversation grader. Each task was labelled by an AI model (Gemini 3.5 Flash) with category, mission, complexity, whether a phone call was involved, and the merchant. Spot checks agreed with the labels.</li>
+    <li>“Shopping” covers goods, food, travel, tickets, services, subscriptions and bills. “Retail” is physical goods plus restaurant food delivery.</li>
+    <li>Country comes from the user's phone number, or their timezone when there is no phone.</li>
+    <li>Users are the most reliable measure. One mission often splits into several tasks, and call counts include redials.</li>
+    <li>Purchases: one purchase per user, merchant and conversation. “Completed” means the card charge cleared.</li>
+  </ul>
+</div>
+</div>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const D = {"totals": {"users": 17208, "tasks": 228130, "commerce_users": 10461, "commerce_tasks": 80337, "retail_users": 4613, "retail_tasks": 24251, "amazon_users": 1089}, "retail_cat": [{"k": "restaurant_food_delivery", "users": 1509, "tasks": 4229, "success": 87.0, "phone": 16.2}, {"k": "apparel_shoes", "users": 874, "tasks": 2943, "success": 90.4, "phone": 8.1}, {"k": "grocery", "users": 756, "tasks": 1928, "success": 87.4, "phone": 12.9}, {"k": "gifts_flowers", "users": 686, "tasks": 1245, "success": 91.8, "phone": 6.5}, {"k": "electronics", "users": 478, "tasks": 1400, "success": 93.4, "phone": 6.0}, {"k": "computers_phones", "users": 476, "tasks": 1528, "success": 91.2, "phone": 7.9}, {"k": "sports_fitness", "users": 456, "tasks": 1156, "success": 89.4, "phone": 17.0}, {"k": "auto_vehicle", "users": 414, "tasks": 1548, "success": 90.9, "phone": 16.7}, {"k": "home_furniture_decor", "users": 401, "tasks": 1215, "success": 91.0, "phone": 7.1}, {"k": "beauty_personal_care", "users": 381, "tasks": 1052, "success": 91.6, "phone": 4.4}, {"k": "books_media_music", "users": 318, "tasks": 841, "success": 86.5, "phone": 6.8}, {"k": "health_pharmacy", "users": 294, "tasks": 727, "success": 86.5, "phone": 24.5}, {"k": "home_improvement_tools", "users": 259, "tasks": 682, "success": 90.6, "phone": 14.2}, {"k": "appliances", "users": 251, "tasks": 741, "success": 92.3, "phone": 8.2}, {"k": "accessories_jewelry", "users": 226, "tasks": 640, "success": 89.7, "phone": 10.6}, {"k": "household_essentials", "users": 222, "tasks": 477, "success": 89.7, "phone": 7.5}, {"k": "toys_games", "users": 179, "tasks": 501, "success": 89.6, "phone": 11.4}, {"k": "pets", "users": 112, "tasks": 287, "success": 92.7, "phone": 14.6}, {"k": "alcohol_tobacco", "users": 93, "tasks": 227, "success": 86.0, "phone": 19.4}, {"k": "video_games", "users": 93, "tasks": 283, "success": 87.2, "phone": 3.2}, {"k": "baby_kids", "users": 79, "tasks": 230, "success": 93.8, "phone": 4.3}, {"k": "garden_outdoor", "users": 77, "tasks": 205, "success": 92.1, "phone": 12.2}, {"k": "office_school", "users": 70, "tasks": 166, "success": 89.9, "phone": 18.7}], "commerce_cat": [{"k": "software_digital_subscriptions", "users": 3319, "tasks": 8100, "success": 87.6, "phone": 3.7}, {"k": "local_services", "users": 2478, "tasks": 8761, "success": 86.4, "phone": 27.8}, {"k": "travel_flights", "users": 1748, "tasks": 6799, "success": 91.8, "phone": 6.1}, {"k": "insurance_financial", "users": 1662, "tasks": 5266, "success": 87.0, "phone": 14.3}, {"k": "restaurant_food_delivery", "users": 1509, "tasks": 4229, "success": 87.0, "phone": 16.2}, {"k": "restaurant_reservation", "users": 1243, "tasks": 3859, "success": 81.4, "phone": 28.3}, {"k": "car_rental_transport", "users": 1117, "tasks": 3307, "success": 86.9, "phone": 12.2}, {"k": "travel_hotels_lodging", "users": 1038, "tasks": 3598, "success": 91.4, "phone": 14.2}, {"k": "healthcare_appointments", "users": 969, "tasks": 2842, "success": 82.9, "phone": 43.5}, {"k": "event_tickets", "users": 907, "tasks": 2742, "success": 90.0, "phone": 4.7}, {"k": "apparel_shoes", "users": 874, "tasks": 2943, "success": 90.4, "phone": 8.1}, {"k": "telecom_internet", "users": 759, "tasks": 1905, "success": 81.3, "phone": 29.1}, {"k": "grocery", "users": 756, "tasks": 1928, "success": 87.4, "phone": 12.9}, {"k": "gifts_flowers", "users": 686, "tasks": 1245, "success": 91.8, "phone": 6.5}, {"k": "education_classes", "users": 590, "tasks": 1712, "success": 92.0, "phone": 11.5}], "mission": [{"k": "discover_recommend", "users": 4472, "tasks": 16703, "success": 93.6, "phone": 4.1}, {"k": "compare_research", "users": 4084, "tasks": 17553, "success": 95.0, "phone": 5.2}, {"k": "book_reserve", "users": 3087, "tasks": 7894, "success": 75.9, "phone": 36.8}, {"k": "cancel_change_subscription", "users": 2282, "tasks": 3587, "success": 83.7, "phone": 11.8}, {"k": "support_dispute", "users": 2269, "tasks": 5923, "success": 82.1, "phone": 26.9}, {"k": "order_status_delivery", "users": 2106, "tasks": 4504, "success": 90.8, "phone": 12.0}, {"k": "purchase", "users": 2050, "tasks": 4081, "success": 64.6, "phone": 10.6}, {"k": "price_deal", "users": 1971, "tasks": 4685, "success": 90.2, "phone": 8.5}, {"k": "availability_stock", "users": 1921, "tasks": 4336, "success": 83.8, "phone": 33.3}, {"k": "quote_negotiate", "users": 1286, "tasks": 3252, "success": 75.7, "phone": 47.2}, {"k": "return_refund_exchange", "users": 781, "tasks": 1514, "success": 87.6, "phone": 21.8}, {"k": "gift", "users": 482, "tasks": 608, "success": 88.1, "phone": 4.4}, {"k": "reorder", "users": 82, "tasks": 98, "success": 85.7, "phone": 13.3}], "complexity": [{"k": 2, "users": 8997, "tasks": 50168, "success": 87.4, "phone": 14.2}, {"k": 1, "users": 5652, "tasks": 23683, "success": 94.9, "phone": 1.3}, {"k": 3, "users": 2962, "tasks": 6486, "success": 59.8, "phone": 64.1}], "country": [{"k": "US", "users": 7667, "commerce": 5261, "retail": 2449}, {"k": "IN", "users": 2495, "commerce": 1396, "retail": 617}, {"k": "GB", "users": 807, "commerce": 536, "retail": 239}, {"k": "CA", "users": 482, "commerce": 315, "retail": 124}, {"k": "AU", "users": 291, "commerce": 193, "retail": 87}, {"k": "ES", "users": 170, "commerce": 122, "retail": 64}, {"k": "DE", "users": 178, "commerce": 126, "retail": 59}, {"k": "AE", "users": 144, "commerce": 93, "retail": 42}, {"k": "SG", "users": 152, "commerce": 107, "retail": 41}, {"k": "IL", "users": 120, "commerce": 73, "retail": 34}, {"k": "NG", "users": 620, "commerce": 193, "retail": 59}, {"k": "MX", "users": 106, "commerce": 74, "retail": 32}], "heat": {"countries": ["US", "IN", "GB", "CA", "AU", "ES", "DE", "AE"], "cats": ["restaurant_food_delivery", "apparel_shoes", "grocery", "gifts_flowers", "electronics", "computers_phones", "sports_fitness", "auto_vehicle", "home_furniture_decor", "beauty_personal_care", "books_media_music", "health_pharmacy"], "cells": [[17.7, 16.5, 16.4, 28.0, 11.0, 13.6, 11.7, 13.3], [12.6, 11.8, 13.1, 6.4, 13.8, 19.5, 11.1, 9.3], [7.2, 10.3, 9.4, 12.3, 5.4, 9.6, 9.5, 15.6], [5.0, 4.5, 6.8, 4.2, 8.2, 0.8, 7.4, 2.2], [4.7, 10.1, 6.1, 6.2, 4.9, 1.6, 4.9, 4.0], [5.1, 9.9, 3.0, 6.2, 7.3, 11.5, 4.6, 8.0], [5.5, 2.9, 5.4, 2.8, 4.7, 2.4, 1.8, 8.0], [7.9, 2.8, 3.6, 5.7, 3.3, 6.1, 4.9, 2.7], [5.5, 5.0, 4.7, 0.9, 7.5, 1.3, 6.2, 2.2], [4.0, 5.1, 3.5, 4.9, 7.5, 3.7, 1.8, 8.4], [3.1, 3.3, 5.0, 1.9, 4.7, 4.8, 3.7, 2.7], [3.3, 1.4, 0.8, 5.0, 5.9, 7.5, 4.3, 0.4]]}, "amazon_mission": [{"k": "discover_recommend", "users": 388, "tasks": 735, "success": 94.8, "phone": 0.1}, {"k": "compare_research", "users": 276, "tasks": 469, "success": 96.2, "phone": 0.2}, {"k": "price_deal", "users": 267, "tasks": 506, "success": 94.8, "phone": 0.2}, {"k": "purchase", "users": 189, "tasks": 326, "success": 77.7, "phone": 0.9}, {"k": "order_status_delivery", "users": 156, "tasks": 216, "success": 92.3, "phone": 4.6}, {"k": "support_dispute", "users": 106, "tasks": 166, "success": 79.8, "phone": 25.9}, {"k": "cancel_change_subscription", "users": 87, "tasks": 104, "success": 88.5, "phone": 5.8}, {"k": "return_refund_exchange", "users": 76, "tasks": 128, "success": 91.6, "phone": 10.9}, {"k": "availability_stock", "users": 60, "tasks": 73, "success": 97.1, "phone": 6.8}, {"k": "reorder", "users": 22, "tasks": 22, "success": 93.3, "phone": 0.0}], "calls": {"total": 120288, "callers": 6674, "commerce": 51938, "commerce_callers": 3763, "retail": 13111, "retail_callers": 1380}, "call_retail_mission": [{"k": "availability_stock", "calls": 3599, "callers": 470}, {"k": "compare_research", "calls": 2627, "callers": 371}, {"k": "quote_negotiate", "calls": 2515, "callers": 167}, {"k": "return_refund_exchange", "calls": 733, "callers": 140}, {"k": "order_status_delivery", "calls": 726, "callers": 200}, {"k": "support_dispute", "calls": 691, "callers": 147}, {"k": "purchase", "calls": 635, "callers": 179}, {"k": "price_deal", "calls": 501, "callers": 85}, {"k": "discover_recommend", "calls": 390, "callers": 79}, {"k": "book_reserve", "calls": 298, "callers": 77}], "call_why": [{"k": "Confirm details with a person", "calls": 18385, "callers": 2279}, {"k": "Dispute needs a human", "calls": 5443, "callers": 791}, {"k": "Negotiate the price", "calls": 4010, "callers": 530}, {"k": "Cancellation requires a call", "calls": 2511, "callers": 591}, {"k": "Stock not visible online", "calls": 1455, "callers": 222}, {"k": "Small business, no website", "calls": 1311, "callers": 164}, {"k": "Merchant takes phone orders only", "calls": 944, "callers": 154}], "amazon_calls": {"total": 406, "callers": 73, "by": [{"k": "return_refund_exchange", "calls": 162, "callers": 18}, {"k": "support_dispute", "calls": 123, "callers": 23}, {"k": "order_status_delivery", "calls": 26, "callers": 8}, {"k": "compare_research", "calls": 18, "callers": 5}, {"k": "availability_stock", "calls": 15, "callers": 2}, {"k": "cancel_change_subscription", "calls": 14, "callers": 5}]}, "purchases": {"attempts": 1214, "buyers": 542, "completed": 699, "usd": 91642}, "purch_cat": [{"k": "restaurant_food_delivery", "completed": 62, "usd": 2450, "buyers": 50}, {"k": "gifts_flowers", "completed": 51, "usd": 4854, "buyers": 43}, {"k": "event_tickets", "completed": 51, "usd": 7167, "buyers": 46}, {"k": "car_rental_transport", "completed": 49, "usd": 4725, "buyers": 39}, {"k": "grocery", "completed": 46, "usd": 2154, "buyers": 31}, {"k": "travel_flights", "completed": 41, "usd": 14927, "buyers": 26}, {"k": "beauty_personal_care", "completed": 34, "usd": 1798, "buyers": 30}, {"k": "government_fees", "completed": 30, "usd": 5450, "buyers": 26}, {"k": "apparel_shoes", "completed": 27, "usd": 2194, "buyers": 24}, {"k": "home_furniture_decor", "completed": 26, "usd": 2605, "buyers": 21}, {"k": "local_services", "completed": 20, "usd": 8279, "buyers": 19}, {"k": "health_pharmacy", "completed": 16, "usd": 1303, "buyers": 15}, {"k": "books_media_music", "completed": 16, "usd": 862, "buyers": 14}, {"k": "travel_hotels_lodging", "completed": 15, "usd": 12745, "buyers": 14}], "purch_country": [{"k": "US", "completed": 519, "usd": 79036, "buyers": 268}, {"k": "GB", "completed": 58, "usd": 3769, "buyers": 36}, {"k": "CA", "completed": 16, "usd": 875, "buyers": 10}, {"k": "IN", "completed": 15, "usd": 1357, "buyers": 12}, {"k": "AU", "completed": 14, "usd": 1139, "buyers": 8}, {"k": "AE", "completed": 12, "usd": 715, "buyers": 5}, {"k": "ES", "completed": 7, "usd": 356, "buyers": 4}, {"k": "DE", "completed": 7, "usd": 247, "buyers": 5}], "amazon_purch": {"attempts": 118, "completed": 101, "usd": 5683, "sites": 10}};
+if(location.hash==='#light'||location.hash==='#dark')document.documentElement.dataset.theme=location.hash.slice(1);
+const NAMES={restaurant_food_delivery:'Food delivery & takeout',apparel_shoes:'Clothing & shoes',grocery:'Grocery',gifts_flowers:'Gifts & flowers',electronics:'Electronics',computers_phones:'Computers & phones',sports_fitness:'Sports & fitness',auto_vehicle:'Auto & car parts',home_furniture_decor:'Home & furniture',beauty_personal_care:'Beauty & personal care',books_media_music:'Books, media & music',health_pharmacy:'Health & pharmacy',home_improvement_tools:'Home improvement & tools',appliances:'Appliances',accessories_jewelry:'Accessories & jewelry',household_essentials:'Household essentials',toys_games:'Toys & games',pets:'Pets',alcohol_tobacco:'Alcohol & tobacco',video_games:'Video games',baby_kids:'Baby & kids',garden_outdoor:'Garden & outdoor',office_school:'Office & school',
+software_digital_subscriptions:'Software & subscriptions',local_services:'Local services',travel_flights:'Flights',insurance_financial:'Insurance & finance',restaurant_reservation:'Restaurant reservations',car_rental_transport:'Car rental & rides',travel_hotels_lodging:'Hotels & stays',healthcare_appointments:'Doctor & clinic visits',event_tickets:'Event tickets',telecom_internet:'Phone & internet plans',education_classes:'Classes & education',real_estate_rental:'Real estate & rentals',utilities_energy:'Utilities',government_fees:'Government fees',
+discover_recommend:'Find & recommend',compare_research:'Compare options',book_reserve:'Book or reserve',cancel_change_subscription:'Cancel or change a subscription',support_dispute:'Customer support & disputes',order_status_delivery:'Track an order',availability_stock:'Check stock',price_deal:'Find a price or deal',purchase:'Buy it',quote_negotiate:'Get a quote or negotiate',return_refund_exchange:'Return or refund',gift:'Pick a gift',reorder:'Reorder'};
+const CN={US:'United States',IN:'India',GB:'United Kingdom',CA:'Canada',NG:'Nigeria',AU:'Australia',DE:'Germany',ES:'Spain',SG:'Singapore',AE:'UAE',CN:'China',MX:'Mexico',IL:'Israel',FR:'France',BR:'Brazil',SA:'Saudi Arabia'};
+const nm=k=>NAMES[k]||CN[k]||k;
+const fmt=n=>n.toLocaleString('en-US');
+const pct=(a,b)=>Math.round(100*a/b)+'%';
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const tip=document.getElementById('tip');
+function showTip(ev,lines){
+  tip.replaceChildren();
+  lines.forEach((l,i)=>{const d=document.createElement('div');d.className=i===0?'tv':(i===1?'tl':'tx');d.textContent=l;tip.appendChild(d)});
+  const r=ev.target.getBoundingClientRect?ev.target.getBoundingClientRect():null;
+  let x=ev.clientX??(r.left+r.width/2), y=ev.clientY??r.top;
+  tip.style.opacity=1;
+  const w=tip.offsetWidth,h=tip.offsetHeight;
+  x=Math.min(x+14,innerWidth-w-8); y=Math.max(8,y-h-10);
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+const hideTip=()=>tip.style.opacity=0;
+function tableView(host,head,rows){
+  const det=document.createElement('details');const s=document.createElement('summary');s.textContent='Show as table';det.appendChild(s);
+  const t=document.createElement('table');const tr=document.createElement('tr');
+  head.forEach(h=>{const th=document.createElement('th');th.textContent=h;tr.appendChild(th)});t.appendChild(tr);
+  rows.forEach(r=>{const tr=document.createElement('tr');r.forEach(c=>{const td=document.createElement('td');td.textContent=c;tr.appendChild(td)});t.appendChild(tr)});
+  det.appendChild(t);host.appendChild(det);
+}
+// Horizontal bar chart. opts: value(d), label(d), valText(d), tip(d)->lines, cols:[{head,text(d)}], max, labelW
+function hbar(id,data,o){
+  const host=document.getElementById(id);
+  const W=host.clientWidth||480, rowH=28, top=o.cols?22:6, labelW=o.labelW||190, colW=o.cols?o.cols.length*96:0, valW=64;
+  const plotW=Math.max(80,W-labelW-colW-valW-8);
+  const H=top+data.length*rowH+4;
+  const svg=el('svg',{width:W,height:H,viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':o.aria||id},host);
+  const max=o.max||Math.max(...data.map(o.value));
+  if(o.cols){o.cols.forEach((c,i)=>{el('text',{x:labelW+plotW+valW+i*96+90,y:14,'text-anchor':'end',class:'colhead'},svg).textContent=c.head})}
+  data.forEach((d,i)=>{
+    const y=top+i*rowH, v=o.value(d), w=Math.max(2,plotW*v/max);
+    const g=el('g',{class:'row'},svg);
+    el('text',{x:labelW-10,y:y+rowH/2+4,'text-anchor':'end',class:'lab'},g).textContent=o.label(d);
+    const bh=16, by=y+(rowH-bh)/2;
+    // square at baseline, 4px rounded data end
+    el('path',{class:'bar'+(o.alt&&o.alt(d)?' alt':''),d:`M${labelW},${by} h${Math.max(0,w-4)} a4,4 0 0 1 4,4 v${bh-8} a4,4 0 0 1 -4,4 h${-Math.max(0,w-4)} z`},g);
+    el('text',{x:labelW+w+6,y:y+rowH/2+4,class:'val'},g).textContent=o.valText(d);
+    if(o.cols)o.cols.forEach((c,j)=>{el('text',{x:labelW+plotW+valW+j*96+90,y:y+rowH/2+4,'text-anchor':'end',class:'val'},g).textContent=c.text(d)});
+    const hit=el('rect',{x:0,y,width:W,height:rowH,class:'hit',tabindex:0},g);
+    const lines=o.tip(d);
+    hit.addEventListener('pointermove',e=>showTip(e,lines));hit.addEventListener('pointerleave',hideTip);
+    hit.addEventListener('focus',e=>showTip({target:hit},lines));hit.addEventListener('blur',hideTip);
+  });
+  tableView(host,o.tableHead,data.map(o.tableRow));
+}
+// Tiles
+const T=D.totals,P=D.purchases,C=D.calls;
+const tiles=[
+  {cls:'hero',label:'Users who shopped or booked with Fo',value:pct(T.commerce_users,T.users),sub:`${fmt(T.commerce_users)} of ${fmt(T.users)} active users`},
+  {label:'Shopped for goods',value:pct(T.retail_users,T.users),sub:`${fmt(T.retail_users)} users`},
+  {label:'Shopping tasks',value:fmt(Math.round(T.commerce_tasks/1000))+'K',sub:`${pct(T.commerce_tasks,T.tasks)} of all tasks`},
+  {label:'Shopping phone calls',value:fmt(Math.round(C.commerce/1000))+'K',sub:`${pct(C.commerce,C.total)} of all calls Fo placed`},
+  {label:'Purchases Fo completed',value:fmt(P.completed),sub:`$${fmt(Math.round(P.usd/100)/10)}K spent, ${fmt(P.buyers)} buyers`},
+];
+const th=document.getElementById('tiles');
+tiles.forEach(t=>{const d=document.createElement('div');d.className='tile '+(t.cls||'');[['label',t.label],['value',t.value],['sub',t.sub]].forEach(([c,x])=>{const e=document.createElement('div');e.className=c;e.textContent=x;d.appendChild(e)});th.appendChild(d)});
+// 1 categories
+const rc=D.retail_cat.slice(0,15);
+document.getElementById('catLede').textContent=`Food delivery, clothing and grocery lead retail. Electronics and computers/phones together reach about ${fmt(rc.filter(d=>d.k==='electronics'||d.k==='computers_phones').reduce((a,d)=>a+d.users,0))} users. Outside goods, people use Fo most for subscriptions, local services and travel.`;
+const catOpts=(tot)=>({value:d=>d.users,label:d=>nm(d.k),valText:d=>fmt(d.users),labelW:200,
+  tip:d=>[`${fmt(d.users)} users`,nm(d.k),`${fmt(d.tasks)} tasks · ${d.success}% succeeded · ${d.phone}% needed a call`],
+  tableHead:['Category','Users','Tasks','Success','Needed a call'],tableRow:d=>[nm(d.k),fmt(d.users),fmt(d.tasks),d.success+'%',d.phone+'%']});
+hbar('retailCat',rc,catOpts());
+const RET=new Set(D.retail_cat.map(d=>d.k));
+hbar('commerceCat',D.commerce_cat.filter(d=>!RET.has(d.k)).slice(0,15),catOpts());
+// 2 country
+hbar('country',D.country,{value:d=>d.commerce/d.users,max:1,label:d=>nm(d.k),valText:d=>pct(d.commerce,d.users),labelW:150,
+  cols:[{head:'Goods',text:d=>pct(d.retail,d.users)},{head:'Users',text:d=>fmt(d.users)}],
+  tip:d=>[`${pct(d.commerce,d.users)} shop or book`,nm(d.k),`${fmt(d.commerce)} of ${fmt(d.users)} users · ${fmt(d.retail)} shopped for goods`],
+  tableHead:['Country','Users','Shop or book','Shop for goods'],tableRow:d=>[nm(d.k),fmt(d.users),pct(d.commerce,d.users),pct(d.retail,d.users)]});
+// heatmap
+(function(){
+  const H=D.heat, host=document.getElementById('heat');
+  const vals=H.cells.flat(), mx=Math.max(...vals);
+  const steps=[0,3,7,12,18,24];
+  const shade=v=>{let s=0;for(let i=0;i<steps.length;i++)if(v>=steps[i])s=i;return s};
+  const t=document.createElement('table');t.className='heat';
+  const hr=document.createElement('tr');hr.appendChild(document.createElement('th'));
+  H.countries.forEach(c=>{const x=document.createElement('th');x.textContent=nm(c);hr.appendChild(x)});t.appendChild(hr);
+  H.cats.forEach((c,i)=>{const tr=document.createElement('tr');const h=document.createElement('td');h.className='rowh';h.textContent=nm(c);tr.appendChild(h);
+    H.cells[i].forEach((v,j)=>{const td=document.createElement('td');const s=shade(v);td.className='s'+s;
+      td.textContent=Math.round(v)+'%';td.tabIndex=0;
+      const lines=[`${v}%`,`${nm(c)} in ${nm(H.countries[j])}`,'share of that country\'s retail tasks'];
+      td.addEventListener('pointermove',e=>showTip(e,lines));td.addEventListener('pointerleave',hideTip);
+      td.addEventListener('focus',()=>showTip({target:td},lines));td.addEventListener('blur',hideTip);
+      tr.appendChild(td)});t.appendChild(tr)});
+  host.appendChild(t);
+  const lg=document.createElement('div');lg.className='legend-ramp';
+  const a=document.createElement('span');a.textContent='Less';lg.appendChild(a);
+  for(let i=0;i<6;i++){const s=document.createElement('span');s.className='sw';s.style.background=`var(--seq-${i})`;lg.appendChild(s)}
+  const b=document.createElement('span');b.textContent='More (24%+)';lg.appendChild(b);host.appendChild(lg);
+})();
+// 3 missions
+hbar('mission',D.mission,{value:d=>d.users,label:d=>nm(d.k),valText:d=>fmt(d.users),labelW:230,
+  cols:[{head:'Succeeded',text:d=>Math.round(d.success)+'%'},{head:'Phone call',text:d=>Math.round(d.phone)+'%'}],
+  tip:d=>[`${fmt(d.users)} users`,nm(d.k),`${fmt(d.tasks)} tasks · ${d.success}% succeeded · ${d.phone}% needed a call`],
+  tableHead:['Mission','Users','Tasks','Succeeded','Needed a call'],tableRow:d=>[nm(d.k),fmt(d.users),fmt(d.tasks),d.success+'%',d.phone+'%']});
+// 4 complexity
+const CXN={1:['Simple','One lookup or one action, no special constraints. Example: “What does this cost on Amazon?”'],2:['Moderate','Several constraints or a few options to compare, or one purchase at one store. Example: “Find running shoes under $120 in my size and order them.”'],3:['Complex','Several merchants, logins or codes, payment plus coordination, negotiation or a dispute. Example: “Get my refund for the broken TV, they keep stalling.”']};
+const cxh=document.getElementById('cx');
+D.complexity.sort((a,b)=>a.k-b.k).forEach(d=>{const m=document.createElement('div');m.className='mini';
+  const tt=sumT=>0;const total=D.complexity.reduce((a,x)=>a+x.tasks,0);
+  [['big',pct(d.tasks,total)+' of tasks'],['t',CXN[d.k][0]],['d',CXN[d.k][1]],['d',`${Math.round(d.success)}% succeed · ${Math.round(d.phone)}% need a phone call · ${fmt(d.users)} users`]].forEach(([c,x])=>{const e=document.createElement('div');e.className=c;e.textContent=x;m.appendChild(e)});cxh.appendChild(m)});
+// 5 calls
+document.getElementById('callLede').textContent=`Fo placed ${fmt(C.total)} calls to businesses and people in 19 days. ${pct(C.commerce,C.total)} of them were about shopping or bookings (${fmt(C.commerce_callers)} users). For goods, calls mostly answer what a website can't: is it on the shelf right now, what is the real price, and can you fix my order.`;
+hbar('callMission',D.call_retail_mission.slice(0,9),{value:d=>d.calls,label:d=>nm(d.k),valText:d=>pct(d.calls,C.retail),labelW:200,
+  tip:d=>[`${fmt(d.calls)} calls`,nm(d.k),`${fmt(d.callers)} users · ${pct(d.calls,C.retail)} of retail calls`],
+  tableHead:['Mission','Calls','Users','Share'],tableRow:d=>[nm(d.k),fmt(d.calls),fmt(d.callers),pct(d.calls,C.retail)]});
+const why=D.call_why;const whyTot=C.commerce;
+hbar('callWhy',why,{value:d=>d.calls,label:d=>d.k,valText:d=>pct(d.calls,whyTot),labelW:220,
+  tip:d=>[`${fmt(d.calls)} calls`,d.k,`${fmt(d.callers)} users`],tableHead:['Reason','Calls','Users','Share of shopping calls'],tableRow:d=>[d.k,fmt(d.calls),fmt(d.callers),pct(d.calls,whyTot)]});
+const AZ=D.amazon_calls,AP=D.amazon_purch;
+const co=document.getElementById('amazonCallout');
+[['b','Where a phone call fits an Amazon purchase. '],['span',`Buying on Amazon almost never needs a call: Fo completed ${AP.completed} of ${AP.attempts} Amazon orders online (${pct(AP.completed,AP.attempts)}), across ${AP.sites} Amazon country sites. Calls show up after the purchase, to chase refunds and returns, dispute charges, track deliveries and recover locked accounts. They also show up before it, when the user needs the item today and Fo calls local stores to check stock.`]].forEach(([t,x])=>{const e=document.createElement(t);e.textContent=x;co.appendChild(e)});
+document.getElementById('azCallSub').textContent=`${fmt(AZ.total)} calls mentioned Amazon (${AZ.callers} users), by what the call was for`;
+hbar('azCalls',AZ.by,{value:d=>d.calls,label:d=>nm(d.k),valText:d=>pct(d.calls,AZ.total),labelW:230,
+  tip:d=>[`${fmt(d.calls)} calls`,nm(d.k),`${d.callers} users`],tableHead:['Purpose','Calls','Users'],tableRow:d=>[nm(d.k),fmt(d.calls),fmt(d.callers)]});
+// 6 purchases
+document.getElementById('purchLede').textContent=`Fo completed ${fmt(P.completed)} purchases for ${fmt(P.buyers)} buyers, $${fmt(P.usd)} in total. Most are small everyday orders: food, tickets, gifts, groceries and rides. Flights and hotels are fewer but carry the largest amounts.`;
+const pOpts={value:d=>d.completed,valText:d=>fmt(d.completed),tip:d=>[`${fmt(d.completed)} completed`,nm(d.k),`$${fmt(d.usd)} spent · ${d.buyers} buyers`],tableHead:['Name','Completed','Spend (USD)','Buyers'],tableRow:d=>[nm(d.k),fmt(d.completed),'$'+fmt(d.usd),fmt(d.buyers)]};
+hbar('purchCat',D.purch_cat,{...pOpts,label:d=>nm(d.k),labelW:200});
+hbar('purchCountry',D.purch_country,{...pOpts,label:d=>nm(d.k),labelW:150});
+// theme toggle
+document.getElementById('themeBtn').addEventListener('click',()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=dark?'light':'dark'});
+</script>
+</body>
+</html>
